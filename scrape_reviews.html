@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrape Reviews</title>
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+}
+
+/* Form styling */
+form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+    color: #555;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+input[type="text"],
+input[type="date"] {
+    background-color: #f9f9f9;
+}
+
+/* Form error message */
+.error {
+    color: red;
+    font-size: 14px;
+}
+
+.success {
+    color: green;
+    font-size: 14px;
+}
+
+.btn {
+    padding: 10px 20px; /* Add padding for better spacing */
+    font-size: 16px; /* Increase font size */
+    border: none; /* Remove default border */
+    border-radius: 5px; /* Round the corners */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    transition: background-color 0.3s, transform 0.2s; /* Add smooth transitions */
+}
+
+.btn-primary {
+    background-color: #007bff; /* Primary color */
+    color: #fff; /* Text color */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    transform: translateY(-2px); /* Slightly lift the button on hover */
+}
+
+.btn-primary:active {
+    background-color: #004085; /* Even darker shade when clicked */
+    transform: translateY(0); /* Reset the lift effect */
+}
+
+    </style>
+</head>
+<body style="background-color: #B1C1D5;">
+    <div class="container">
+        <h1 class="mt-5">Scrape Reviews</h1>
+        <form id="scrape-form" method="post" class="mt-4">
+            <div class="form-group">
+                <label for="company_name">Company Name</label>
+                <input type="text" class="form-control" id="company_name" name="company_name" placeholder="Enter the company name" required>
+            </div>
+            <div class="form-group">
+                <label for="start_date">Start Date (YYYY-MM-DD)</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date (YYYY-MM-DD)</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required>
+            </div>
+            <div class="form-group">
+                <label for="source">Source</label>
+                <select class="form-control" id="source" name="source" required>
+                    <option value="" disabled selected>Select a Source</option>
+                    <option value="G2">G2</option>
+                    <option value="Capterra">Capterra</option>
+                </select>
+            </div>
+            <br>
+            <br>
+            <button type="submit" class="btn btn-primary">Scrape Reviews</button>
+        </form>
+
+        <div id="results" class="mt-4">
+            <!-- Reviews will appear here -->
+        </div>
+    </div>
+
+    <!-- JavaScript to handle form submission and display results dynamically -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#scrape-form').on('submit', function (event) {
+                event.preventDefault();  // Prevent form from submitting the normal way
+
+                // Get form data
+                var formData = {
+                    company_name: $('#company_name').val().trim(),
+                    start_date: $('#start_date').val(),
+                    end_date: $('#end_date').val(),
+                    source: $('#source').val(),
+                };
+
+                // Send AJAX request to the Flask server
+                $.ajax({
+                    url: '/scrape_reviews',
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        $('#results').empty();  // Clear previous results
+
+                        if (response.length > 0) {
+                            response.forEach(function (review) {
+                                $('#results').append(
+                                    `<div class="card mt-3">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${review.title}</h5>
+                                            <p class="card-text">${review.review}</p>
+                                            <p class="card-text"><small class="text-muted">Date: ${new Date(review.date).toLocaleDateString()}</small></p>
+                                        </div>
+                                    </div>`
+                                );
+                            });
+                        } else {
+                            $('#results').html('<p class="text-muted">No reviews found for the given period and source.</p>');
+                        }
+                    },
+                    error: function () {
+                        $('#results').html('<p class="text-danger">An error occurred while fetching reviews. Please check your inputs.</p>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
